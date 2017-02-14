@@ -166,8 +166,14 @@
         makeLogoutButtonDiv(logoutButtonDiv, map);
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(logoutButtonDiv);
         
+        var marker = null;
         function placeMarker(location) {
-			    var marker = new google.maps.Marker({
+        	// delete old marker
+        	if(marker) {
+        		marker.setMap(null);
+        	}
+        	
+			    marker = new google.maps.Marker({
 			        position: location, 
 			        map: map
 			    });
