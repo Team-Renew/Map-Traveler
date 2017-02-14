@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Map-Traveler</title>
+    <!-- *******************************************************************************************
+       * TODO(DEVELOPER): Paste the initialization snippet from:
+       * Firebase Console > Overview > Add Firebase to your web app. *
+       ***************************************************************************************** -->       
+    <script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
+		<script>
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw",
+		    authDomain: "child-locator-e0eea.firebaseapp.com",
+		    databaseURL: "https://child-locator-e0eea.firebaseio.com",
+		    storageBucket: "child-locator-e0eea.appspot.com",
+		    messagingSenderId: "804770720140"
+		  };
+		  firebase.initializeApp(config);
+		</script>
+
+    <script src="https://cdn.firebase.com/libs/firebaseui/1.0.0/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/1.0.0/firebaseui.css" />
+    
+    <script type="text/javascript">
+    	// FirebaseUI config.
+      var uiConfig = {
+        callbacks: {
+          signInSuccess: function(currentUser, credential, redirectUrl) {
+            // Do something.
+            // Return type determines whether we continue the redirect automatically
+            // or whether we leave that to developer to handle.
+            return true;
+          },
+          uiShown: function() {
+            // The widget is rendered.
+            // Hide the loader.
+            document.getElementById('loader').style.display = 'none';
+          }
+        },
+        credentialHelper: firebaseui.auth.CredentialHelper.ACCOUNT_CHOOSER_COM,
+        // Query parameter name for mode.
+        queryParameterForWidgetMode: 'mode',
+        // Query parameter name for sign in success url.
+        queryParameterForSignInSuccessUrl: 'signInSuccessUrl',
+        // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+        signInFlow: 'popup',
+        signInSuccessUrl: 'index-map.html',
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+          firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+          firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+          firebase.auth.GithubAuthProvider.PROVIDER_ID,
+          firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ],
+        // Terms of service url.
+        tosUrl: '<your-tos-url>'
+      };
+
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      // The start method will wait until the DOM is loaded.
+      ui.start('#firebaseui-auth-container', uiConfig);
+    </script>
+    
+  </head>
+  <body>
+    <!-- The surrounding HTML is left untouched by FirebaseUI.
+         Your app may use that space for branding, controls and other customizations.-->
+    <h1 style="text-align:center">Welcome to Map-Traveler</h1>
+    <div id="firebaseui-auth-container"></div>
+    <div id="loader">Loading...</div>
+  </body>
+</html>

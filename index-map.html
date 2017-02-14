@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<title>Map-Traveler</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    
+    <script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
+		<script>
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw",
+		    authDomain: "child-locator-e0eea.firebaseapp.com",
+		    databaseURL: "https://child-locator-e0eea.firebaseio.com",
+		    storageBucket: "child-locator-e0eea.appspot.com",
+		    messagingSenderId: "804770720140"
+		  };
+		  firebase.initializeApp(config);
+		</script>
+		
+    <script type="text/javascript">
+    	var authenticatedUserUID = null;
+      initApp = function() {
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (user) {
+            // User is signed in.
+            var displayName = user.displayName;
+            var email = user.email;
+            var emailVerified = user.emailVerified;
+            var photoURL = user.photoURL;
+            var uid = user.uid;
+            authenticatedUserUID = user.uid;
+            var providerData = user.providerData;
+            
+            user.getToken().then(function(accessToken) {
+              //document.getElementById('sign-in-status').textContent = 'Signed in';
+              //document.getElementById('sign-in').textContent = 'Sign out';
+              /* document.getElementById('account-details').textContent = JSON.stringify({
+                displayName: displayName,
+                email: email,
+                emailVerified: emailVerified,
+                photoURL: photoURL,
+                uid: uid,
+                accessToken: accessToken,
+                providerData: providerData
+              }, null, '  '); */
+            });
+          } else {
+            // User is signed out.
+            //document.getElementById('sign-in-status').textContent = 'Signed out';
+            //document.getElementById('sign-in').textContent = 'Sign in';
+            //document.getElementById('account-details').textContent = 'null';
+            
+            window.location.href = "index-auth.html";
+          }
+        }, function(error) {
+          console.log(error);
+        });
+      };
+
+      window.addEventListener('load', function() {
+        initApp()
+      });
+    </script>
+    
+  </head>
+  <body>
+    <div id="sign-in-status"></div>
+    <div id="sign-in"></div>
+    <div id="account-details"></div>
+    
+    <div id="map"></div>
+
+    <script>
+      /**
+      * Data object to be written to Firebase.
+      */
+      var data = {
+        timestamp: null,
+        lat: null,
+        lng: null
+      };
+
+      function makeInfoBox(controlDiv, map) {
+        // Set CSS for the control border.
+        var controlUI = document.createElement('div');
+        controlUI.style.boxShadow = 'rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px';
+        controlUI.style.backgroundColor = '#fff';
+        controlUI.style.border = '2px solid #fff';
+        controlUI.style.borderRadius = '2px';
+        controlUI.style.marginBottom = '22px';
+        controlUI.style.marginTop = '10px';
+        controlUI.style.textAlign = 'center';
+        controlDiv.appendChild(controlUI);
+
+        // Set CSS for the control interior.
+        var controlText = document.createElement('div');
+        controlText.style.color = 'rgb(25,25,25)';
+        controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+        controlText.style.fontSize = '100%';
+        controlText.style.padding = '6px';
+        controlText.textContent = 'The map shows last click which corresponds to the last position of signed in user.';
+        controlUI.appendChild(controlText);
+      }
+      
+      function makeLogoutButtonDiv(logoutButtonDiv, map) {
+        var buttonUI = document.createElement('div'); 
+        buttonUI.style.boxShadow = 'rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px';
+        buttonUI.style.backgroundColor = '#fff';
+        buttonUI.style.border = '2px solid #fff';
+        buttonUI.style.borderRadius = '2px';
+        buttonUI.style.marginBottom = '22px';
+        buttonUI.style.marginTop = '10px';
+        buttonUI.style.marginRight = '10px';
+        buttonUI.style.borderRadius = '5px';
+        buttonUI.style.textAlign = 'right';
+        logoutButtonDiv.appendChild(buttonUI);       
+
+        var buttonText = document.createElement('button');
+        buttonText.style.color = 'rgb(25,25,25)';
+        buttonText.style.fontFamily = 'Roboto,Arial,sans-serif';
+        buttonText.style.fontSize = '100%';
+        buttonText.style.padding = '6px';
+        buttonText.style.borderRadius = '7px';
+        buttonText.textContent = 'Sign out.';        
+        buttonUI.appendChild(buttonText);
+      }
+      
+      /**
+       * Creates a map object with a click listener.
+       */
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 42.65095826562482, lng: 23.379281759262085},
+          zoom: 16,
+          styles: [{
+            featureType: 'poi',
+            stylers: [{ visibility: 'off' }]  // Turn off POI.
+          },
+          {
+            featureType: 'transit.station',
+            stylers: [{ visibility: 'on' }]  // Turn on bus, train stations etc.
+          }],
+          disableDoubleClickZoom: false,
+          streetViewControl: false,
+        });
+
+        // Create the DIV to hold the control and call the makeInfoBox() constructor
+        // passing in this DIV.
+        var infoBoxDiv = document.createElement('div');        
+        makeInfoBox(infoBoxDiv, map);
+        map.controls[google.maps.ControlPosition.TOP_CENTER].push(infoBoxDiv);
+        
+        var logoutButtonDiv = document.createElement('div');        
+        makeLogoutButtonDiv(logoutButtonDiv, map);
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(logoutButtonDiv);
+        
+        function placeMarker(location) {
+			    var marker = new google.maps.Marker({
+			        position: location, 
+			        map: map
+			    });
+				}
+
+        // Listen for clicks and add the location of the click to firebase.
+        map.addListener('click', function(event) {
+          data.lat = event.latLng.lat();
+          data.lng = event.latLng.lng();
+          
+          if(authenticatedUserUID) {
+	          addToFirebase(data);
+	          
+	          placeMarker(event.latLng);
+	        }
+        });
+        
+        logoutButtonDiv.addEventListener('click', function(e) {
+          if(authenticatedUserUID) {
+	          firebase.auth().signOut().then(function() {
+						  console.log('Sign-out successful.');
+						  window.location.href = "index-auth.html";
+						}, function(error) {
+						  console.log('An error happened.');
+						});
+	        }
+        });
+      }
+
+      /**
+       * Adds a click to firebase.
+       * @param {Object} data - The data to be added to firebase.
+       *     It contains the lat, lng and timestamp.
+       */
+      function addToFirebase(data) {
+        // Add the new timestamp to the record data.
+        data.timestamp = firebase.database.ServerValue.TIMESTAMP;
+                  
+        firebase.database().ref(`users/${authenticatedUserUID}/positions`).push(data, function(err) {
+          if (err) {  // Data was not written to firebase.
+            console.warn(err);
+          }
+        });
+        
+        firebase.database().ref(`users/${authenticatedUserUID}/lastPosition`).update({
+				    timestamp: data.timestamp,
+				    lat: data.lat,
+				    lng : data.lng
+				  });
+			  
+			  firebase.database().ref(`users/${authenticatedUserUID}/lastPosition`).once("value", function(lastPosition) {
+				  console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);
+				  console.log('lastPosition.lat: ', lastPosition.val().lat);
+				  console.log('lastPosition.lng: ', lastPosition.val().lng);
+				  console.log('---');
+				})
+      }
+    </script>
+    
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw&libraries=visualization&callback=initMap">
+    </script>
+  </body>
+</html>
