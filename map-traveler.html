@@ -26,47 +26,59 @@
 		    storageBucket: "child-locator-e0eea.appspot.com",
 		    messagingSenderId: "804770720140"
 		  };
+		  
 		  firebase.initializeApp(config);
 		</script>
 		
     <script type="text/javascript">
     	var authenticatedUserUID = null;
+    	var authenticatedUserEmail = null;
+    	
       initApp = function() {
-        firebase.auth().onAuthStateChanged(function(user) {
-          if (user) {
-            // User is signed in.
-            var displayName = user.displayName;
-            var email = user.email;
-            var emailVerified = user.emailVerified;
-            var photoURL = user.photoURL;
-            var uid = user.uid;
-            authenticatedUserUID = user.uid;
-            var providerData = user.providerData;
+        firebase.auth()
+        	.onAuthStateChanged(function(user) {
+	          if (user) {
+	            // User is signed in.
+	            var uid = user.uid;
+	            authenticatedUserUID = uid;	            
+
+	            var email = user.email;
+	            authenticatedUserEmail = email;
+		      		firebase.database()
+			        	.ref(`users/${authenticatedUserUID}`)
+			        	.update({email: authenticatedUserEmail});
+	            
+	            var displayName = user.displayName;
+	            var emailVerified = user.emailVerified;
+	            var photoURL = user.photoURL;	            
+	            var providerData = user.providerData;
+	            
+	            user.getToken().then(function(accessToken) {
+	              //document.getElementById('sign-in-status').textContent = 'Signed in';
+	              //document.getElementById('sign-in').textContent = 'Sign out';
+	              /* document.getElementById('account-details').textContent = JSON.stringify({
+	                displayName: displayName,
+	                email: email,
+	                emailVerified: emailVerified,
+	                photoURL: photoURL,
+	                uid: uid,
+	                accessToken: accessToken,
+	                providerData: providerData
+	              }, null, '  '); */
+	            });
             
-            user.getToken().then(function(accessToken) {
-              //document.getElementById('sign-in-status').textContent = 'Signed in';
-              //document.getElementById('sign-in').textContent = 'Sign out';
-              /* document.getElementById('account-details').textContent = JSON.stringify({
-                displayName: displayName,
-                email: email,
-                emailVerified: emailVerified,
-                photoURL: photoURL,
-                uid: uid,
-                accessToken: accessToken,
-                providerData: providerData
-              }, null, '  '); */
-            });
-          } else {
-            // User is signed out.
-            //document.getElementById('sign-in-status').textContent = 'Signed out';
-            //document.getElementById('sign-in').textContent = 'Sign in';
-            //document.getElementById('account-details').textContent = 'null';
-            
-            window.location.href = "index-auth.html";
-          }
-        }, function(error) {
-          console.log(error);
-        });
+            	initMap();
+	          } else {
+	            // User is signed out.
+	            //document.getElementById('sign-in-status').textContent = 'Signed out';
+	            //document.getElementById('sign-in').textContent = 'Sign in';
+	            //document.getElementById('account-details').textContent = 'null';
+	            
+	            window.location.href = "./map-traveler-auth.html";
+	          }
+	        }, function(error) {
+	          console.log(error);
+	        });
       };
 
       window.addEventListener('load', function() {
@@ -110,7 +122,7 @@
         controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
         controlText.style.fontSize = '100%';
         controlText.style.padding = '6px';
-        controlText.textContent = 'The map shows last click which corresponds to the last position of signed in user.';
+        controlText.textContent = `The map shows last click which corresponds to the last position of signed in user: ${authenticatedUserEmail}`;
         controlUI.appendChild(controlText);
       }
       
@@ -141,9 +153,26 @@
        * Creates a map object with a click listener.
        */
       function initMap() {
-        var map = new google.maps.Map(document.getElementById('map'), {
+      	var map;
+      	
+      	if(authenticatedUserUID) {
+      		firebase.database()
+        		.ref(`users/${authenticatedUserUID}/lastPosition`)
+        		.once("value", function(lastPosition) {
+        			if(lastPosition.val()) {
+        				data.timestamp = lastPosition.val().timestamp;
+						  	data.lat = lastPosition.val().lat;
+						  	data.lng = lastPosition.val().lng;
+						  	
+						  	// center the map on marker
+		          	map.setCenter(lastPosition.val());
+        			}					  	
+						});        
+        }
+        
+        map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: 42.65095826562482, lng: 23.379281759262085},
-          zoom: 16,
+          zoom: 10,
           styles: [{
             featureType: 'poi',
             stylers: [{ visibility: 'off' }]  // Turn off POI.
@@ -152,7 +181,7 @@
             featureType: 'transit.station',
             stylers: [{ visibility: 'on' }]  // Turn on bus, train stations etc.
           }],
-          disableDoubleClickZoom: false,
+          disableDoubleClickZoom: true,
           streetViewControl: false,
         });
 
@@ -166,6 +195,27 @@
         makeLogoutButtonDiv(logoutButtonDiv, map);
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(logoutButtonDiv);
         
+        if(authenticatedUserUID) {
+        	firebase.database()
+        		.ref(`users/${authenticatedUserUID}/lastPosition`)
+        		.once("value", function(lastPosition) {
+					  	placeMarker(lastPosition.val());
+								map.setCenter(lastPosition.val());
+						});
+						
+					firebase.database()
+				  	.ref(`users/${authenticatedUserUID}/lastPosition`)
+				  	.on("value", function(lastPosition) {
+						  console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);
+						  console.log('lastPosition.lat: ', lastPosition.val().lat);
+						  console.log('lastPosition.lng: ', lastPosition.val().lng);
+						  console.log('---');
+						  
+						  placeMarker(lastPosition.val());
+						  map.setCenter(lastPosition.val());
+						});      
+        }        
+        
         var marker = null;
         function placeMarker(location) {
         	// delete old marker
@@ -174,8 +224,8 @@
         	}
         	
 			    marker = new google.maps.Marker({
-			        position: location, 
-			        map: map
+			    	position: location, 
+			      map: map
 			    });
 				}
 
@@ -186,18 +236,22 @@
           
           if(authenticatedUserUID) {
 	          addToFirebase(data);
-	          
+
 	          placeMarker(event.latLng);
+	          
+	          // auto center map on marker click
+	          //map.setCenter(marker.getPosition());
 	        }
         });
         
         logoutButtonDiv.addEventListener('click', function(e) {
           if(authenticatedUserUID) {
-	          firebase.auth().signOut().then(function() {
-						  console.log('Sign-out successful.');
-						  window.location.href = "index-auth.html";
-						}, function(error) {
-						  console.log('An error happened.');
+	          firebase.auth().signOut()
+	          	.then(function() {
+							  console.log('Sign-out successful.');
+							  window.location.href = "./map-traveler-auth.html";
+							}, function(error) {
+							  console.log('An error happened.');
 						});
 	        }
         });
@@ -212,29 +266,26 @@
         // Add the new timestamp to the record data.
         data.timestamp = firebase.database.ServerValue.TIMESTAMP;
                   
-        firebase.database().ref(`users/${authenticatedUserUID}/positions`).push(data, function(err) {
-          if (err) {  // Data was not written to firebase.
-            console.warn(err);
-          }
-        });
+        firebase.database()
+        	.ref(`users/${authenticatedUserUID}/positions`)
+        	.push(data, function(err) {
+	          if (err) {  // Data was not written to firebase.
+	            console.warn(err);
+	          }
+	        });
         
-        firebase.database().ref(`users/${authenticatedUserUID}/lastPosition`).update({
+        firebase.database()
+        	.ref(`users/${authenticatedUserUID}/lastPosition`)
+        	.update({
 				    timestamp: data.timestamp,
 				    lat: data.lat,
 				    lng : data.lng
 				  });
-			  
-			  firebase.database().ref(`users/${authenticatedUserUID}/lastPosition`).once("value", function(lastPosition) {
-				  console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);
-				  console.log('lastPosition.lat: ', lastPosition.val().lat);
-				  console.log('lastPosition.lng: ', lastPosition.val().lng);
-				  console.log('---');
-				})
       }
     </script>
     
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw&libraries=visualization&callback=initMap">
+    	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw&libraries=visualization">
     </script>
   </body>
 </html>
