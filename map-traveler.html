@@ -5,7 +5,7 @@
     <style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
-      #map {
+      #map_canvas {
         height: 100%;
       }
       /* Optional: Makes the sample page fill the window. */
@@ -16,19 +16,588 @@
       }
     </style>
     
-    <script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
-		<script>
-		  // Initialize Firebase
-		  var config = {
-		    apiKey: "AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw",
-		    authDomain: "child-locator-e0eea.firebaseapp.com",
-		    databaseURL: "https://child-locator-e0eea.firebaseio.com",
-		    storageBucket: "child-locator-e0eea.appspot.com",
-		    messagingSenderId: "804770720140"
-		  };
-		  
-		  firebase.initializeApp(config);
+    <!-- Replace API_KEY with yours from https://console.developers.google.com/apis/credentials -->
+    <script
+    	src="https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=visualization">
+    </script>
+    
+    <script src="https://code.jquery.com/jquery.min.js"></script>
+    
+		<!-- jquery.easing.1.3.js -->
+		<script type="text/javascript">
+		/*
+		 * jQuery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/
+		 *
+		 * Uses the built in easing capabilities added In jQuery 1.1
+		 * to offer multiple easing options
+		 *
+		 * TERMS OF USE - jQuery Easing
+		 * 
+		 * Open source under the BSD License. 
+		 * 
+		 * Copyright © 2008 George McGinley Smith
+		 * All rights reserved.
+		 * 
+		 * Redistribution and use in source and binary forms, with or without modification, 
+		 * are permitted provided that the following conditions are met:
+		 * 
+		 * Redistributions of source code must retain the above copyright notice, this list of 
+		 * conditions and the following disclaimer.
+		 * Redistributions in binary form must reproduce the above copyright notice, this list 
+		 * of conditions and the following disclaimer in the documentation and/or other materials 
+		 * provided with the distribution.
+		 * 
+		 * Neither the name of the author nor the names of contributors may be used to endorse 
+		 * or promote products derived from this software without specific prior written permission.
+		 * 
+		 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY 
+		 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+		 * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+		 *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+		 *  GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+		 * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+		 *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+		 * OF THE POSSIBILITY OF SUCH DAMAGE. 
+		 *
+		*/
+
+		// t: current time, b: begInnIng value, c: change In value, d: duration
+		jQuery.easing['jswing'] = jQuery.easing['swing'];
+
+		jQuery.extend( jQuery.easing,
+		{
+			def: 'easeOutQuad',
+			swing: function (x, t, b, c, d) {
+				//alert(jQuery.easing.default);
+				return jQuery.easing[jQuery.easing.def](x, t, b, c, d);
+			},
+			easeInQuad: function (x, t, b, c, d) {
+				return c*(t/=d)*t + b;
+			},
+			easeOutQuad: function (x, t, b, c, d) {
+				return -c *(t/=d)*(t-2) + b;
+			},
+			easeInOutQuad: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t + b;
+				return -c/2 * ((--t)*(t-2) - 1) + b;
+			},
+			easeInCubic: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t + b;
+			},
+			easeOutCubic: function (x, t, b, c, d) {
+				return c*((t=t/d-1)*t*t + 1) + b;
+			},
+			easeInOutCubic: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t + b;
+				return c/2*((t-=2)*t*t + 2) + b;
+			},
+			easeInQuart: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t*t + b;
+			},
+			easeOutQuart: function (x, t, b, c, d) {
+				return -c * ((t=t/d-1)*t*t*t - 1) + b;
+			},
+			easeInOutQuart: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+				return -c/2 * ((t-=2)*t*t*t - 2) + b;
+			},
+			easeInQuint: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t*t*t + b;
+			},
+			easeOutQuint: function (x, t, b, c, d) {
+				return c*((t=t/d-1)*t*t*t*t + 1) + b;
+			},
+			easeInOutQuint: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+				return c/2*((t-=2)*t*t*t*t + 2) + b;
+			},
+			easeInSine: function (x, t, b, c, d) {
+				return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+			},
+			easeOutSine: function (x, t, b, c, d) {
+				return c * Math.sin(t/d * (Math.PI/2)) + b;
+			},
+			easeInOutSine: function (x, t, b, c, d) {
+				return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+			},
+			easeInExpo: function (x, t, b, c, d) {
+				return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+			},
+			easeOutExpo: function (x, t, b, c, d) {
+				return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+			},
+			easeInOutExpo: function (x, t, b, c, d) {
+				if (t==0) return b;
+				if (t==d) return b+c;
+				if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+				return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+			},
+			easeInCirc: function (x, t, b, c, d) {
+				return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+			},
+			easeOutCirc: function (x, t, b, c, d) {
+				return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+			},
+			easeInOutCirc: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+				return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+			},
+			easeInElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+			},
+			easeOutElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+			},
+			easeInOutElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+				return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+			},
+			easeInBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158;
+				return c*(t/=d)*t*((s+1)*t - s) + b;
+			},
+			easeOutBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158;
+				return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+			},
+			easeInOutBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158; 
+				if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+				return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+			},
+			easeInBounce: function (x, t, b, c, d) {
+				return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+			},
+			easeOutBounce: function (x, t, b, c, d) {
+				if ((t/=d) < (1/2.75)) {
+					return c*(7.5625*t*t) + b;
+				} else if (t < (2/2.75)) {
+					return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+				} else if (t < (2.5/2.75)) {
+					return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+				} else {
+					return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+				}
+			},
+			easeInOutBounce: function (x, t, b, c, d) {
+				if (t < d/2) return jQuery.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
+				return jQuery.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
+			}
+		});
+
+		/*
+		 *
+		 * TERMS OF USE - EASING EQUATIONS
+		 * 
+		 * Open source under the BSD License. 
+		 * 
+		 * Copyright © 2001 Robert Penner
+		 * All rights reserved.
+		 * 
+		 * Redistribution and use in source and binary forms, with or without modification, 
+		 * are permitted provided that the following conditions are met:
+		 * 
+		 * Redistributions of source code must retain the above copyright notice, this list of 
+		 * conditions and the following disclaimer.
+		 * Redistributions in binary form must reproduce the above copyright notice, this list 
+		 * of conditions and the following disclaimer in the documentation and/or other materials 
+		 * provided with the distribution.
+		 * 
+		 * Neither the name of the author nor the names of contributors may be used to endorse 
+		 * or promote products derived from this software without specific prior written permission.
+		 * 
+		 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY 
+		 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+		 * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+		 *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+		 *  GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+		 * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+		 *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+		 * OF THE POSSIBILITY OF SUCH DAMAGE. 
+		 *
+		 */
 		</script>
+
+		<!-- markerAnimate.js -->
+		<script type="text/javascript">
+		// Animated Marker Movement. Robert Gerlach 2012-2013 https://github.com/combatwombat/marker-animate
+		// MIT license
+		//
+		// params:
+		// newPosition        - the new Position as google.maps.LatLng()
+		// options            - optional options object (optional)
+		// options.duration   - animation duration in ms (default 1000)
+		// options.easing     - easing function from jQuery and/or the jQuery easing plugin (default 'linear')
+		// options.complete   - callback function. Gets called, after the animation has finished
+		google.maps.Marker.prototype.animateTo = function(newPosition, options) {
+		  defaultOptions = {
+		    duration: 1000,
+		    easing: 'linear',
+		    complete: null
+		  }
+		  options = options || {};
+
+		  // complete missing options
+		  for (key in defaultOptions) {
+		    options[key] = options[key] || defaultOptions[key];
+		  }
+
+		  // throw exception if easing function doesn't exist
+		  if (options.easing != 'linear') {            
+		    if (typeof jQuery == 'undefined' || !jQuery.easing[options.easing]) {
+		      throw '"' + options.easing + '" easing function doesn\'t exist. Include jQuery and/or the jQuery easing plugin and use the right function name.';
+		      return;
+		    }
+		  }
+		  
+		  window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+		  window.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;
+
+		  // save current position. prefixed to avoid name collisions. separate for lat/lng to avoid calling lat()/lng() in every frame
+		  this.AT_startPosition_lat = this.getPosition().lat();
+		  this.AT_startPosition_lng = this.getPosition().lng();
+		  var newPosition_lat = newPosition.lat();
+		  var newPosition_lng = newPosition.lng();
+		  
+		  // crossing the 180° meridian and going the long way around the earth?
+		  if (Math.abs(newPosition_lng - this.AT_startPosition_lng) > 180) {
+		    if (newPosition_lng > this.AT_startPosition_lng) {      
+		      newPosition_lng -= 360;      
+		    } else {
+		      newPosition_lng += 360;
+		    }
+		  }
+
+		  var animateStep = function(marker, startTime) {            
+		    var ellapsedTime = (new Date()).getTime() - startTime;
+		    var durationRatio = ellapsedTime / options.duration; // 0 - 1
+		    var easingDurationRatio = durationRatio;
+
+		    // use jQuery easing if it's not linear
+		    if (options.easing !== 'linear') {
+		      easingDurationRatio = jQuery.easing[options.easing](durationRatio, ellapsedTime, 0, 1, options.duration);
+		    }
+		    
+		    if (durationRatio < 1) {
+		      var deltaPosition = new google.maps.LatLng( marker.AT_startPosition_lat + (newPosition_lat - marker.AT_startPosition_lat)*easingDurationRatio,
+		                                                  marker.AT_startPosition_lng + (newPosition_lng - marker.AT_startPosition_lng)*easingDurationRatio);
+		      marker.setPosition(deltaPosition);
+
+		      // use requestAnimationFrame if it exists on this browser. If not, use setTimeout with ~60 fps
+		      if (window.requestAnimationFrame) {
+		        marker.AT_animationHandler = window.requestAnimationFrame(function() {animateStep(marker, startTime)});                
+		      } else {
+		        marker.AT_animationHandler = setTimeout(function() {animateStep(marker, startTime)}, 17); 
+		      }
+
+		    } else {
+		      
+		      marker.setPosition(newPosition);
+
+		      if (typeof options.complete === 'function') {
+		        options.complete();
+		      }
+
+		    }            
+		  }
+
+		  // stop possibly running animation
+		  if (window.cancelAnimationFrame) {
+		    window.cancelAnimationFrame(this.AT_animationHandler);
+		  } else {
+		    clearTimeout(this.AT_animationHandler); 
+		  }
+		  
+		  animateStep(this, (new Date()).getTime());
+		}
+		</script>
+
+		<!-- SlidingMarker.js -->
+		<script type="text/javascript">
+		/* global define,module,require,google */
+
+		(function (root, factory) {
+		    'use strict';
+		    if (typeof define === 'function' && define.amd) {
+		        // AMD. Register as an anonymous module.
+		        define(['jquery', 'marker-animate'], factory.bind(null, root));
+		    } else if (typeof module !== "undefined" && module !== null && module.exports != null) { // jshint ignore:line
+		        // Node module.
+		        module.exports = factory(root, require('jquery'), require('marker-animate'));
+		    } else {
+		        // Browser globals
+		        root.SlidingMarker = factory(root, root.jQuery);
+		    }
+		}(this,
+		    function (root, $) {
+		        'use strict';
+
+		        //Let jQuery be soft dependency
+		        $ = $ || {};
+		        $.extend = $.extend || function extend(obj) {
+		            //Taken (and modified) from here: http://stackoverflow.com/a/14604815/1691132
+		            Array.prototype.slice.call(arguments, 1).forEach(function (source) {
+		                if (source) {
+		                    for (var prop in source) {
+		                        if (source[prop] && source[prop].constructor === Object) {
+		                            if (!obj[prop] || obj[prop].constructor === Object) {
+		                                obj[prop] = obj[prop] || {};
+		                                extend(obj[prop], source[prop]);
+		                            } else {
+		                                obj[prop] = source[prop];
+		                            }
+		                        } else {
+		                            obj[prop] = source[prop];
+		                        }
+		                    }
+		                }
+		            });
+		            return obj;
+		        };
+
+		        var GoogleMarker = google.maps.Marker; //Store original in case it will be replaced in initializeGlobally().
+
+		        var animateTo,
+		            markerAnimate_AnimateTo_Wrapper = function(destPosition, easing, duration) { //default implementation based on markerAnimate
+		                if (destPosition === null || destPosition === undefined) {
+		                    //as markerAnimate provides no means to stop animation, do it manually, even though it leaks markerAnimate implementation.
+		                    if (window.cancelAnimationFrame) {
+		                        window.cancelAnimationFrame(this.AT_animationHandler);
+		                    } else {
+		                        clearTimeout(this.AT_animationHandler); 
+		                    }
+		                    return;
+		                }
+		                google.maps.Marker.prototype.animateTo.apply(this, arguments);
+		            };
+
+		        //default options
+		        var defaultOptions = {
+		            easing: "easeInOutQuint",
+		            duration: 1000,
+		            animateFunctionAdapter: function (marker, destPosition, easing, duration) {
+		                if (!animateTo) {
+		                    if (!google.maps.Marker.prototype.animateTo) {
+		                        throw new Error("Please either reference markerAnimate.js, or provide an alternative animateFunctionAdapter");
+		                    }
+		                    animateTo = markerAnimate_AnimateTo_Wrapper;
+		                }
+		                animateTo.call(marker, destPosition, {
+		                    easing: easing,
+		                    duration: duration,
+		                    complete: function () {
+		                    }
+		                });
+		            }
+		        };
+
+		        var inherits = function (childCtor, parentCtor) {
+		            /* @constructor */
+		            function TempCtor() {}
+
+		            TempCtor.prototype = parentCtor.prototype;
+		            childCtor.superClass_ = parentCtor.prototype;
+		            childCtor.prototype = new TempCtor();
+		            /* @override */
+		            childCtor.prototype.constructor = childCtor;
+		        };
+
+		        var decorates = function (childCtor, parentCtor) {
+		            inherits(childCtor, parentCtor);
+
+		            var parentPrototype = parentCtor.prototype;
+
+		            //TODO: google.maps.MVCObject.prototype.set if object instanceof GoogleMarker
+
+		            $.extend(childCtor.prototype, {
+		                _instance: null, //override it in constructor
+
+		                originalSet: function () {
+		                    return parentPrototype.set.apply(this, arguments);
+		                },
+
+		                //from MVCObject
+		                set: function (key, value) {
+		                    var that = this;
+
+		                    that.originalSet.apply(that, arguments);
+
+		                    if (key === "position" && that instanceof SlidingMarker) {
+		                        that._setInstancePositionAnimated(value);
+		                    } else {
+		                        that.originalSet.apply(that._instance, arguments);
+		                    }
+		                },
+
+		                _setInstancePositionAnimated: function (position) {
+		                    var that = this;
+
+		                    if (that._constructing) { //pass by
+		                        return;
+		                    }
+
+		                    if (!position || !that._instance.getPosition()) { //If position is set for a first time, no animation should be applied
+		                        if (that._instance.getPosition() !== position) {
+		                            that._instance.setPosition(position);
+		                        }
+		                        return;
+		                    }
+
+		                    //apply animation function
+		                    //this will cause many animationposition_changed events
+		                    that.get("animateFunctionAdapter").call(null, that._instance, position, that.get("easing"), that.get("duration"));
+		                },
+
+		                //setValues() will call set(), no need to override
+
+		                originalAddListener: function () {
+		                    return parentPrototype.addListener.apply(this, arguments);
+		                },
+
+		                //from MVCObject
+		                addListener: function (eventName, handler) {
+		                    var target = (eventName === "map_changed") ? this._instance : getEventTarget.call(this, eventName);
+		                    return this.originalAddListener.apply(target, arguments);
+		                },
+
+		                map_changed: function () {
+		                    //Should be empty
+		                    //Prevents this marker from appearing on map. Only this._instance marker will appear.
+		                },
+
+		                //This will be called by binding created with marker.bindTo() method, instead of call to set("position").
+		                position_changed: function () {
+		                    if (!this._suppress_animation) {
+		                        this._setInstancePositionAnimated(this.getPosition());
+		                    } else {
+		                        delete this._suppress_animation;
+		                    }
+		                }
+		                
+		            });
+
+		        };
+
+		        //call it on SlidingMarker
+		        var getEventTarget = function (eventName) {
+		            //redirect _changed events to this, other events to _instance
+		            if (eventName.endsWith("_changed")) { //all _changed redirect to this
+		                return this;
+		            } 
+		            return this._instance;
+		        };
+
+		        var originalAddListener = google.maps.event.addListener;
+		        google.maps.event.addListener = function (instance, eventName, handler) {
+		            //Redirect listener to target
+		            if (instance instanceof SlidingMarker) {
+		                var target = (eventName === "map_changed") ? instance._instance : getEventTarget.call(instance, eventName);
+		                return originalAddListener.call(this, target, eventName, handler);
+		            }
+
+		            return originalAddListener.apply(this, arguments);
+		        };
+
+		        var originalTrigger = google.maps.event.trigger;
+		        google.maps.event.trigger = function (instance, eventName) {
+		            //Replace instance parameter to target
+		            if (instance instanceof SlidingMarker) {
+		                var target = (eventName === "map_changed") ? instance : getEventTarget.call(instance, eventName),
+		                    newArgs = [target].concat(Array.prototype.slice.call(arguments, 1)); //replaces instance parameter with target
+
+		                return originalTrigger.apply(this, newArgs);
+		            }
+
+		            return originalTrigger.apply(this, arguments);
+		        };
+
+		        //just string helper
+		        String.prototype.endsWith = String.prototype.endsWith || function(suffix) {
+		            return this.indexOf(suffix, this.length - suffix.length) !== -1;
+		        };
+
+		        //constructor
+		        var SlidingMarker = function (opt_options) {
+
+		            opt_options = $.extend({}, defaultOptions, opt_options);
+
+		            this._instance = new GoogleMarker(opt_options);
+
+		            this.animationPosition = null;
+
+		            this._constructing = true;
+		            // Call the parent constructor.
+		            GoogleMarker.call(this, opt_options);
+		            delete this._constructing;
+
+		            this.bindTo("animationPosition", this._instance, "position");
+		            this.bindTo("anchorPoint", this._instance, "anchorPoint"); //This makes InfoWindow.open(map, marker) work.
+		            this.bindTo("internalPosition", this._instance, "internalPosition"); //This makes InfoWindow.open(map, marker) work.
+
+		        };
+
+		        decorates(SlidingMarker, GoogleMarker);
+
+		        //Overrides
+		        $.extend(SlidingMarker.prototype, {
+
+		            getAnimationPosition: function () {
+		                return this.get("animationPosition");
+		            },
+
+		            //Changes marker position immediately
+		            setPositionNotAnimated: function (position) {
+		                this._suppress_animation = true; //will be unset by position_changed handler
+		                this.get("animateFunctionAdapter").call(null, this._instance, null); //stop current animation
+		                this.originalSet("position", position);
+		                this._instance.setPosition(position);
+		            },
+
+		            setDuration: function (value) {
+		                this.set("duration", value);
+		            },
+
+		            getDuration: function () {
+		                return this.get("duration");
+		            },
+
+		            setEasing: function (value) {
+		                this.set("easing", value);
+		            },
+
+		            getEasing: function () {
+		                return this.get("easing");
+		            }
+
+		        });
+
+		        SlidingMarker.initializeGlobally = function () {
+		            google.maps.Marker = SlidingMarker;
+		        };
+
+		        return SlidingMarker;
+
+		    }));
+		</script>
+    
+<!-- *******************************************************************************************
+     * TODO(DEVELOPER): Paste the initialization snippet from:                                 *
+     * Firebase Console > Overview > Choose your app > Authentication > WEB SETUP > Copy       *
+     ******************************************************************************************* -->
 		
     <script type="text/javascript">
     	var authenticatedUserUID = null;
@@ -88,11 +657,10 @@
     
   </head>
   <body>
-    <div id="sign-in-status"></div>
-    <div id="sign-in"></div>
-    <div id="account-details"></div>
-    
-    <div id="map"></div>
+    <div id='sign-in-status'></div>
+    <div id='sign-in'></div>
+    <div id='account-details'></div>    
+    <div id='map_canvas'></div>
 
     <script>
       /**
@@ -152,27 +720,53 @@
       /**
        * Creates a map object with a click listener.
        */
+      var myLatlng, 
+      	marker, 
+      	map, 
+      	isParent = true;
       function initMap() {
-      	var map;
-      	
-      	if(authenticatedUserUID) {
-      		firebase.database()
+      	$("#map_canvas").css({opacity: 0, zoom: 0});
+        
+        if(authenticatedUserUID) {
+        	firebase.database()
         		.ref(`users/${authenticatedUserUID}/lastPosition`)
         		.once("value", function(lastPosition) {
         			if(lastPosition.val()) {
-        				data.timestamp = lastPosition.val().timestamp;
-						  	data.lat = lastPosition.val().lat;
-						  	data.lng = lastPosition.val().lng;
-						  	
-						  	// center the map on marker
-		          	map.setCenter(lastPosition.val());
-        			}					  	
-						});        
-        }
-        
-        map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: 42.65095826562482, lng: 23.379281759262085},
+	        			myLatlng = new google.maps.LatLng(lastPosition.val().lat, lastPosition.val().lng);
+	        			marker.setVisible(true);
+	        		} else {
+	        			// Telerik coordinates
+	        			myLatlng = new google.maps.LatLng(42.65095826562482, 23.379281759262085);
+	        			marker.setVisible(false);
+	        		}
+
+		          // center the map on marker
+		          map.setCenter(myLatlng);
+		          
+		          marker.setPositionNotAnimated(myLatlng);
+		          
+		          $("#map_canvas").css({opacity: 1, zoom: 1});
+						}); 
+						
+					firebase.database()
+				  	.ref(`users/${authenticatedUserUID}/lastPosition`)
+				  	.on("value", function(lastPosition) {
+				  		if(lastPosition.val()) {
+							  console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);
+							  console.log('lastPosition.lat: ', lastPosition.val().lat);
+							  console.log('lastPosition.lng: ', lastPosition.val().lng);
+							  console.log('---');
+							  
+							  marker.setVisible(true);
+							  myLatlng = new google.maps.LatLng(lastPosition.val());
+						  }
+						});      
+        } 
+             
+        var mapOptions = {
+          center: myLatlng,
           zoom: 10,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
           styles: [{
             featureType: 'poi',
             stylers: [{ visibility: 'off' }]  // Turn off POI.
@@ -182,8 +776,9 @@
             stylers: [{ visibility: 'on' }]  // Turn on bus, train stations etc.
           }],
           disableDoubleClickZoom: true,
-          streetViewControl: false,
-        });
+          streetViewControl: false
+        };
+        map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
 
         // Create the DIV to hold the control and call the makeInfoBox() constructor
         // passing in this DIV.
@@ -194,56 +789,53 @@
         var logoutButtonDiv = document.createElement('div');        
         makeLogoutButtonDiv(logoutButtonDiv, map);
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(logoutButtonDiv);
+
+        //marker = new google.maps.Marker({
+        marker = new SlidingMarker({
+          position: myLatlng,
+          map: map,
+          title: 'I\m sliding marker'
+        });
         
-        if(authenticatedUserUID) {
-        	firebase.database()
-        		.ref(`users/${authenticatedUserUID}/lastPosition`)
-        		.once("value", function(lastPosition) {
-					  	placeMarker(lastPosition.val());
-								map.setCenter(lastPosition.val());
-						});
-						
-					firebase.database()
-				  	.ref(`users/${authenticatedUserUID}/lastPosition`)
-				  	.on("value", function(lastPosition) {
-						  console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);
-						  console.log('lastPosition.lat: ', lastPosition.val().lat);
-						  console.log('lastPosition.lng: ', lastPosition.val().lng);
-						  console.log('---');
-						  
-						  placeMarker(lastPosition.val());
-						  map.setCenter(lastPosition.val());
-						});      
-        }        
-        
-        var marker = null;
-        function placeMarker(location) {
-        	// delete old marker
-        	if(marker) {
-        		marker.setMap(null);
-        	}
-        	
-			    marker = new google.maps.Marker({
-			    	position: location, 
-			      map: map
-			    });
-				}
+        var clickHandler = function (event, clickType) {        	
+        	var duration = 1000;
+        	//// create textbox with id='durationOption' if you want to change duration value
+	        //var duration = parseInt($('#durationOption').val()); 
+					//
+	        //if (duration < 0) {
+          //  duration = 1;
+          //  $('#durationOption').val(duration);
+	        //}
+
+	        marker.setDuration(duration);
+	        
+	        //// create textbox with id='easingOption' if you want to change marker movement
+	        //marker.setEasing($('#easingOption').val()); // 'easeInOutQuint'
+	        marker.setEasing('easeInOutQuad');
+
+	        if (clickType === "left") {
+	        	marker.setPosition(event.latLng);
+	        } else {
+	        	marker.setPositionNotAnimated(event.latLng);
+	        }
+		    };
+
+		    var leftClickHandler = function(event) { clickHandler(event, "left") };
+		    var rightClickHandler = function(event) { clickHandler(event, "right") };
+
+		    google.maps.event.addListener(map, 'click', leftClickHandler);
+		    google.maps.event.addListener(map, 'rightclick', rightClickHandler);
 
         // Listen for clicks and add the location of the click to firebase.
         map.addListener('click', function(event) {
           data.lat = event.latLng.lat();
           data.lng = event.latLng.lng();
-          
+
           if(authenticatedUserUID) {
 	          addToFirebase(data);
-
-	          placeMarker(event.latLng);
-	          
-	          // auto center map on marker click
-	          //map.setCenter(marker.getPosition());
 	        }
         });
-        
+
         logoutButtonDiv.addEventListener('click', function(e) {
           if(authenticatedUserUID) {
 	          firebase.auth().signOut()
@@ -282,10 +874,6 @@
 				    lng : data.lng
 				  });
       }
-    </script>
-    
-    <script async defer
-    	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpSMiRdtsSE3uro27CYxyxYW1bKiQnUdw&libraries=visualization">
     </script>
   </body>
 </html>
