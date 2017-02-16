@@ -791,12 +791,30 @@
         makeLogoutButtonDiv(logoutButtonDiv, map);
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(logoutButtonDiv);
         
+        var image = {
+				  url: './zein.gif',
+				  
+				  // base image is 30x30 px
+				  size: new google.maps.Size(30, 30),
+				  
+					// the most top-left point of your marker in the sprite
+					// (based on scaledSize, not original)
+				  origin: new google.maps.Point(0, 0),
+				  
+				  // the "pointer"/anchor coordinates of the marker (again based on scaledSize)
+				  anchor: new google.maps.Point(15, 35),
+				  
+				  // we want to render @ 30x30 logical px (@2x dppx or 'Retina')
+				  scaledSize: new google.maps.Size(30, 30)
+				};
+
         //marker = new google.maps.Marker({
         // https://github.com/terikon/marker-animate-unobtrusive
         marker = new SlidingMarker({
           position: myLatlng,
           map: map,
           title: 'Test title',
+          icon: image,
 			    draggable: false          
         });
         
