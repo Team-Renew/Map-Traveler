@@ -757,6 +757,7 @@
 							  console.log('lastPosition.lng: ', lastPosition.val().lng);
 							  console.log('---');
 							  
+							  marker.setPosition(lastPosition.val());
 							  marker.setVisible(true);
 							  myLatlng = new google.maps.LatLng(lastPosition.val());
 						  }
