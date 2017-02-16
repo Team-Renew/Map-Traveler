@@ -789,15 +789,17 @@
         var logoutButtonDiv = document.createElement('div');        
         makeLogoutButtonDiv(logoutButtonDiv, map);
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(logoutButtonDiv);
-
+        
         //marker = new google.maps.Marker({
         // https://github.com/terikon/marker-animate-unobtrusive
         marker = new SlidingMarker({
           position: myLatlng,
           map: map,
-          title: 'I\m sliding marker'
+          title: 'Test title',
+			    draggable: false          
         });
         
+        // Listen for clicks and add the location of the click to firebase.
         var clickHandler = function (event, clickType) {        	
         	var duration = 1000;
         	//// create textbox with id='durationOption' if you want to change duration value
@@ -813,6 +815,13 @@
 	        //// create textbox with id='easingOption' if you want to change marker movement
 	        //marker.setEasing($('#easingOption').val()); // 'easeInOutQuint'
 	        marker.setEasing('easeInOutQuad');
+	        
+					data.lat = event.latLng.lat();
+					data.lng = event.latLng.lng();
+          
+          if(authenticatedUserUID) {
+	          addToFirebase(data);
+	        }
 
 	        if (clickType === "left") {
 	        	marker.setPosition(event.latLng);
@@ -826,16 +835,6 @@
 
 		    google.maps.event.addListener(map, 'click', leftClickHandler);
 		    google.maps.event.addListener(map, 'rightclick', rightClickHandler);
-
-        // Listen for clicks and add the location of the click to firebase.
-        map.addListener('click', function(event) {
-          data.lat = event.latLng.lat();
-          data.lng = event.latLng.lng();
-
-          if(authenticatedUserUID) {
-	          addToFirebase(data);
-	        }
-        });
 
         logoutButtonDiv.addEventListener('click', function(e) {
           if(authenticatedUserUID) {
