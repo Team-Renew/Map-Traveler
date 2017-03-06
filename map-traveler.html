@@ -18,7 +18,7 @@
     
     <!-- Replace API_KEY with yours from https://console.developers.google.com/apis/credentials -->
     <script
-    	src="https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=visualization">
+    	src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization">
     </script>
     
     <script src="https://code.jquery.com/jquery.min.js"></script>
@@ -614,7 +614,7 @@
 	            var email = user.email;
 	            authenticatedUserEmail = email;
 		      		firebase.database()
-			        	.ref(`users/${authenticatedUserUID}`)
+			        	.ref(`cl_users/${authenticatedUserUID}`)
 			        	.update({email: authenticatedUserEmail});
 	            
 	            var displayName = user.displayName;
@@ -729,10 +729,11 @@
         
         if(authenticatedUserUID) {
         	firebase.database()
-        		.ref(`users/${authenticatedUserUID}/lastPosition`)
-        		.once("value", function(lastPosition) {
-        			if(lastPosition.val()) {
-	        			myLatlng = new google.maps.LatLng(lastPosition.val().lat, lastPosition.val().lng);
+        		.ref(`cl_users/${authenticatedUserUID}`)
+        		.once("value", function(uid) {
+        			if(uid.val()) {
+	        			/*myLatlng = new google.maps.LatLng(lastPosition.val().lat, lastPosition.val().lng);*/
+	        			myLatlng = new google.maps.LatLng(uid.val().latitude, uid.val().longitude);
 	        			marker.setVisible(true);
 	        		} else {
 	        			// Telerik coordinates
@@ -749,17 +750,19 @@
 						}); 
 						
 					firebase.database()
-				  	.ref(`users/${authenticatedUserUID}/lastPosition`)
-				  	.on("value", function(lastPosition) {
-				  		if(lastPosition.val()) {
-							  console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);
-							  console.log('lastPosition.lat: ', lastPosition.val().lat);
-							  console.log('lastPosition.lng: ', lastPosition.val().lng);
+				  	.ref(`cl_users/${authenticatedUserUID}`)
+				  	.on("value", function(uid) {
+				  		if(uid.val()) {
+				  			
+				  			let latlng = new google.maps.LatLng(uid.val().latitude, uid.val().longitude);
+							  /*console.log('lastPosition.timestamp: ', lastPosition.val().timestamp);*/
+							  console.log('lastPosition.lat: ', uid.val().latitude);
+							  console.log('lastPosition.lng: ', uid.val().longitude);
 							  console.log('---');
 							  
-							  marker.setPosition(lastPosition.val());
+							  marker.setPosition(latlng); /*lastPosition.val());*/
 							  marker.setVisible(true);
-							  myLatlng = new google.maps.LatLng(lastPosition.val());
+							  myLatlng = new google.maps.LatLng(uid.val().latitude, uid.val().longitude); /*lastPosition.val());*/
 						  }
 						});      
         } 
@@ -876,21 +879,23 @@
       function addToFirebase(data) {
         // Add the new timestamp to the record data.
         data.timestamp = firebase.database.ServerValue.TIMESTAMP;
-                  
+        
+        /*          
         firebase.database()
-        	.ref(`users/${authenticatedUserUID}/positions`)
+        	.ref(`cl_users/${authenticatedUserUID}/positions`)
         	.push(data, function(err) {
 	          if (err) {  // Data was not written to firebase.
 	            console.warn(err);
 	          }
 	        });
+	       */
         
         firebase.database()
-        	.ref(`users/${authenticatedUserUID}/lastPosition`)
+        	.ref(`cl_users/${authenticatedUserUID}`)
         	.update({
-				    timestamp: data.timestamp,
-				    lat: data.lat,
-				    lng : data.lng
+				    /*timestamp: data.timestamp,*/
+				    latitude: data.lat,
+				    longitude : data.lng
 				  });
       }
     </script>
